@@ -128,6 +128,9 @@ class Frame extends JFrame {
             @Override
             public void mouseMoved(MouseEvent e) {
                 super.mouseMoved(e);
+                if (fractal == FRACTAL.MANDELBROT){
+                    return;
+                }
                 mouse_x = e.getX();
                 mouse_y = e.getY();
                 draw();
@@ -180,18 +183,20 @@ class Frame extends JFrame {
         final int max_iters = 50;
 
         Complex Z = new Complex();
-        Complex C = new Complex(cartesianToJulia(mouse_x),
-                                  cartesianToJulia(mouse_y));
+        final Complex C = new Complex();
 
         for (int y = 0; y < width; y++){
         for (int x = 0; x < width; x++){
-            Z.setRe(cartesianToJulia(x));
-            Z.setIm(cartesianToJulia(y));
+            Z.setRe(0);
+            Z.setIm(0);
+
+            C.setRe(cartesianToJulia(x));
+            C.setIm(cartesianToJulia(y));
 
             int iters = 0;
             while (iters < max_iters) {
-                C = Complex.sum(Complex.pow_2(C), Z);
-                if (C.getModulus() > 2.0){
+                Z = Complex.sum(Complex.pow_2(Z), C);
+                if (Z.getModulus() > 2.0){
                     break;
                 }
                 iters++;
