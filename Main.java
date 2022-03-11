@@ -17,7 +17,7 @@ class RGB{
     }
 
     public int toInt(){
-        return (((r << 8) + g) << 8) + b;
+        return (r << 16) + (g << 8) + b;
     }
 }
 
@@ -54,12 +54,9 @@ class Complex{
     public static Complex sum(Complex left, Complex right){
         return new Complex(left.getRe() + right.getRe(), left.getIm() + right.getIm());
     }
-    public static Complex sub(Complex left, Complex right){
-        return new Complex(left.getRe() - right.getRe(), left.getIm() - right.getIm());
-    }
     public static Complex multi(Complex left, Complex right){
         return new Complex(left.getRe() * right.getRe() - left.getIm() * right.getIm(),
-                                left.getRe() * right.getIm() + left.getIm() * right.getRe());
+                left.getRe() * right.getIm() + left.getIm() * right.getRe());
     }
     public static Complex pow_2(Complex c){
         return Complex.multi(c, c);
@@ -72,6 +69,7 @@ class Frame extends JFrame {
         MANDELBROT
     }
 
+    private double zoom;
     private double mouse_x;
     private double mouse_y;
 
@@ -94,6 +92,7 @@ class Frame extends JFrame {
             throw new Exception("Bad fractal name");
         }
 
+        zoom = 1.0;
         image = new BufferedImage(width, width, BufferedImage.TYPE_INT_RGB);
         black = new RGB(0, 0, 0);
         white = new RGB(255, 255, 255);
@@ -117,10 +116,17 @@ class Frame extends JFrame {
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                int keyCode = e.getKeyCode();
+                final int keyCode = e.getKeyCode();
+                final double zoom_delta = 0.2;
+
                 if (keyCode == KeyEvent.VK_ESCAPE){
                     System.exit(0);
+                } else if (keyCode == KeyEvent.VK_UP){
+                    zoom += zoom_delta;
+                } else if (keyCode == KeyEvent.VK_DOWN){
+                    zoom -= zoom_delta;
                 }
+                draw();
             }
         });
 
@@ -154,27 +160,27 @@ class Frame extends JFrame {
                                         cartesianToJulia(mouse_y));
 
         for (int y = 0; y < width; y++){
-        for (int x = 0; x < width; x++){
-            Z.setRe(cartesianToJulia(x));
-            Z.setIm(cartesianToJulia(y));
+            for (int x = 0; x < width; x++){
+                Z.setRe(cartesianToJulia(x));
+                Z.setIm(cartesianToJulia(y));
 
-            int iters = 0;
-            while (iters < max_iters) {
-                Z = Complex.sum(Complex.pow_2(Z), C);
-                if (Z.getModulus() > 2.0){
-                    break;
+                int iters = 0;
+                while (iters < max_iters) {
+                    Z = Complex.sum(Complex.pow_2(Z), C);
+                    if (Z.getModulus() > 2.0){
+                        break;
+                    }
+                    iters++;
                 }
-                iters++;
-            }
 
-            int rgb;
-            if (iters == max_iters){
-                rgb = white.toInt();
-            } else {
-                rgb = black.toInt();
+                int rgb;
+                if (iters == max_iters){
+                    rgb = white.toInt();
+                } else {
+                    rgb = black.toInt();
+                }
+                image.setRGB(x, y, rgb);
             }
-            image.setRGB(x, y, rgb);
-        }
         }
         repaint();
     }
@@ -215,7 +221,7 @@ class Frame extends JFrame {
     }
 
     private double cartesianToJulia(double a){
-        return -2.0 + 4.0 / width * a;
+        return -1.0 * 2.0 + 4.0 / width * a;
     }
     private double juliaToCartesian(double a){
         return (a + 2.0) * width / 4.0;
